@@ -20,8 +20,8 @@
     <h1>Hold'em Tournament Calculator</h1>
 
     <div id="gameSets"></div>
-    <button id="addGameSet">Add Game Set</button>
-    <button id="calculateTotals">Calculate Total Costs</button>
+    <button id="addGameSet">게임 추가</button>
+    <button id="calculateTotals">총 비용 계산</button>
 
     <h3>Final Totals</h3>
     <table id="finalResults">
@@ -80,9 +80,9 @@
                         )
                         .join("")}
                 </div>
-                <button onclick="addParticipant('${setId}')">Add Participant</button>
-                <button onclick="calculateResults('${setId}')">Calculate</button>
-                <button onclick="removeGameSet('${setId}')">Remove Game Set</button>
+                <button onclick="addParticipant('${setId}')">참가자 추가</button>
+                <button onclick="calculateResults('${setId}')">계산</button>
+                <button onclick="removeGameSet('${setId}')">게임 삭제제</button>
                 <div class="result-title">
                     <h4 class="game-title">Results</h4>
                     <span class="buyin-prize"></span>
