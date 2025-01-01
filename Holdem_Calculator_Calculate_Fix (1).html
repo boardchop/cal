@@ -1,0 +1,213 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hold'em Tournament Calculator</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .game-set { margin-bottom: 30px; padding: 15px; border: 1px solid #ccc; }
+        .participant { display: flex; align-items: center; margin-bottom: 10px; }
+        .participant button { margin-left: 5px; margin-right: 5px; }
+        button { margin: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid black; padding: 8px; text-align: left; }
+        .result-title { display: flex; justify-content: space-between; align-items: center; }
+    </style>
+</head>
+<body>
+    <h1>Hold'em Tournament Calculator</h1>
+
+    <div id="gameSets"></div>
+    <button id="addGameSet">Add Game Set</button>
+    <button id="calculateTotals">Calculate Total Costs</button>
+
+    <h3>Final Totals</h3>
+    <table id="finalResults">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Total Cost</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+        const defaultNames = ["영진", "지수", "영준", "상문", "영득", "홍재", "광우", "동건", "민석"];
+        const gameSetsDiv = document.getElementById("gameSets");
+        const finalResultsTable = document.getElementById("finalResults").querySelector("tbody");
+
+        let gameSetId = 0;
+
+        document.getElementById("addGameSet").addEventListener("click", addGameSet);
+        document.getElementById("calculateTotals").addEventListener("click", calculateFinalTotals);
+
+        function addGameSet() {
+            const setId = `gameSet${++gameSetId}`;
+            const gameSetDiv = document.createElement("div");
+            gameSetDiv.id = setId;
+            gameSetDiv.className = "game-set";
+            gameSetDiv.innerHTML = `
+                <h3>Game Name:</h3>
+                <input type="text" class="gameName" placeholder="Enter game name" oninput="updateResultTitle('${setId}')"><br><br>
+                <label for="${setId}_buyInAmount">바이인비용:</label>
+                <input type="number" id="${setId}_buyInAmount" placeholder="Enter buy-in amount" oninput="updateResultTitle('${setId}')" required><br>
+                <label for="${setId}_prizeAmount">프라이즈:</label>
+                <input type="number" id="${setId}_prizeAmount" placeholder="Enter prize amount" oninput="updateResultTitle('${setId}')" required><br>
+                <label for="${setId}_firstPlace">1st Place:</label>
+                <select id="${setId}_firstPlace" onchange="validatePlaces('${setId}')">
+                    ${defaultNames.map(name => `<option>${name}</option>`).join("")}
+                </select>
+                <label for="${setId}_secondPlace">2nd Place:</label>
+                <select id="${setId}_secondPlace" onchange="validatePlaces('${setId}')">
+                    ${defaultNames.map(name => `<option>${name}</option>`).join("")}
+                </select>
+                <div class="participants" id="${setId}_participants">
+                    ${defaultNames
+                        .map(
+                            name => `
+                        <div class="participant">
+                            <select class="name">
+                                ${defaultNames.map(n => `<option ${n === name ? "selected" : ""}>${n}</option>`).join("")}
+                            </select>
+                            <button onclick="decrementBuyIn(this)">-</button>
+                            <input type="number" value="1" class="buyIns" required>
+                            <button onclick="incrementBuyIn(this)">+</button>
+                            <button onclick="removeSpecificParticipant(this)">Delete</button>
+                        </div>`
+                        )
+                        .join("")}
+                </div>
+                <button onclick="addParticipant('${setId}')">Add Participant</button>
+                <button onclick="calculateResults('${setId}')">Calculate</button>
+                <button onclick="removeGameSet('${setId}')">Remove Game Set</button>
+                <div class="result-title">
+                    <h4 class="game-title">Results</h4>
+                    <span class="buyin-prize"></span>
+                </div>
+                <table class="results">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Buy-ins</th>
+                            <th>Total Cost</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            `;
+            gameSetsDiv.appendChild(gameSetDiv);
+        }
+
+        function removeGameSet(setId) {
+            const gameSetDiv = document.getElementById(setId);
+            if (gameSetDiv) {
+                gameSetsDiv.removeChild(gameSetDiv);
+            }
+        }
+
+        function addParticipant(setId) {
+            const participantsDiv = document.getElementById(`${setId}_participants`);
+            const participantDiv = document.createElement("div");
+            participantDiv.className = "participant";
+            participantDiv.innerHTML = `
+                <select class="name">
+                    ${defaultNames.map(name => `<option>${name}</option>`).join("")}
+                </select>
+                <button onclick="decrementBuyIn(this)">-</button>
+                <input type="number" value="1" class="buyIns" required>
+                <button onclick="incrementBuyIn(this)">+</button>
+                <button onclick="removeSpecificParticipant(this)">Delete</button>
+            `;
+            participantsDiv.appendChild(participantDiv);
+        }
+
+        function removeSpecificParticipant(button) {
+            const participantDiv = button.parentElement;
+            participantDiv.parentElement.removeChild(participantDiv);
+        }
+
+        function validatePlaces(setId) {
+            const firstPlace = document.getElementById(`${setId}_firstPlace`).value;
+            const secondPlace = document.getElementById(`${setId}_secondPlace`).value;
+
+            if (firstPlace === secondPlace) {
+                alert("1st Place and 2nd Place cannot be the same person.");
+                document.getElementById(`${setId}_secondPlace`).value = "";
+            }
+        }
+
+        function incrementBuyIn(button) {
+            const buyInInput = button.previousElementSibling;
+            const currentValue = parseInt(buyInInput.value) || 0;
+            buyInInput.value = currentValue + 1;
+        }
+
+        function decrementBuyIn(button) {
+            const buyInInput = button.nextElementSibling;
+            const currentValue = parseInt(buyInInput.value) || 0;
+            if (currentValue > 1) {
+                buyInInput.value = currentValue - 1;
+            }
+        }
+
+        function calculateResults(setId) {
+            const buyInAmount = parseInt(document.getElementById(`${setId}_buyInAmount`).value);
+            const prizeAmount = parseInt(document.getElementById(`${setId}_prizeAmount`).value);
+            const firstPlace = document.getElementById(`${setId}_firstPlace`).value;
+            const secondPlace = document.getElementById(`${setId}_secondPlace`).value;
+            const participants = Array.from(document.querySelectorAll(`#${setId}_participants .participant`));
+
+            if (!buyInAmount || !prizeAmount) {
+                alert("Please enter valid Buy-in and Prize amounts.");
+                return;
+            }
+
+            const buyInData = participants.map(participant => ({
+                name: participant.querySelector(".name").value,
+                buyIns: parseInt(participant.querySelector(".buyIns").value) || 0
+            }));
+
+            const x = Math.ceil(prizeAmount / (1 + 2 * (buyInData.length - 2)));
+            const twoX = Math.ceil(x * 2);
+
+            const resultsTable = document.querySelector(`#${setId} .results tbody`);
+            resultsTable.innerHTML = "";
+
+            const results = buyInData.map(p => {
+                const buyInCost = Math.ceil(p.buyIns * buyInAmount);
+                let additionalCost = 0;
+
+                if (p.name === firstPlace) {
+                    additionalCost = 0;
+                } else if (p.name === secondPlace) {
+                    additionalCost = x;
+                } else {
+                    additionalCost = twoX;
+                }
+
+                const totalCost = buyInCost + additionalCost;
+                return { name: p.name, buyIns: p.buyIns, totalCost, buyInCost, additionalCost };
+            });
+
+            results.sort((a, b) => a.totalCost - b.totalCost); // Sort by total cost
+
+            results.forEach(p => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${p.name}</td>
+                    <td>${p.buyIns}</td>
+                    <td>${addCommas(p.buyInCost)} + ${addCommas(p.additionalCost)} = ${addCommas(p.totalCost)}</td>
+                `;
+                resultsTable.appendChild(row);
+            });
+        }
+
+        function addCommas(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+    </script>
+</body>
+</html>
